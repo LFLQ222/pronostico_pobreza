@@ -26,8 +26,20 @@ def app():
     # Data for social deprivations (carencias sociales)
     # Extracting relevant rows for carencias from the full data
     # Full data for both 2022 and 2024 forecasts (parsed from the images)
+    # Organized into four main categories
     full_data_raw = {
+        'Categoría': [
+            # POBREZA
+            'POBREZA', 'POBREZA', 'POBREZA', 'POBREZA', 'POBREZA', 'POBREZA', 'POBREZA',
+            # PRIVACIÓN SOCIAL
+            'PRIVACIÓN SOCIAL', 'PRIVACIÓN SOCIAL', 'PRIVACIÓN SOCIAL',
+            # INDICADORES DE CARENCIA SOCIAL
+            'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'INDICADORES DE CARENCIA SOCIAL',
+            # BIENESTAR ECONÓMICO
+            'BIENESTAR ECONÓMICO', 'BIENESTAR ECONÓMICO', 'BIENESTAR ECONÓMICO'
+        ],
         'Variable': [
+            # POBREZA
             'Pobreza',
             'Población en pobreza',
             'Población en pobreza moderada',
@@ -35,9 +47,11 @@ def app():
             'Población vulnerable por carencias sociales',
             'Población vulnerable por ingresos',
             'Población no pobre y no vulnerable',
+            # PRIVACIÓN SOCIAL
             'Privación social',
             'Población con al menos una carencia social',
             'Población con al menos tres carencias sociales',
+            # INDICADORES DE CARENCIA SOCIAL
             'Indicadores de carencia social',
             'Rezago educativo',
             'Carencia por acceso a los servicios de salud',
@@ -45,26 +59,39 @@ def app():
             'Carencia por calidad y espacios de la vivienda',
             'Carencia por acceso a los servicios básicos de la vivienda',
             'Carencia por acceso a la alimentación nutritiva y de calidad',
+            # BIENESTAR ECONÓMICO
             'Bienestar económico',
             'Población con ingreso inferior a la linea de pobreza extrema por ingresos',
             'Población con ingreso inferior a la linea de pobreza por ingresos'
         ],
         'Valores 2022 (%)': [ # Data from the second image, cleaned to float where possible
+            # POBREZA
             None, 16.0, 15.0, 1.1, 28.4, 9.6, 45.9,
+            # PRIVACIÓN SOCIAL
             None, 44.5, 8.8,
+            # INDICADORES DE CARENCIA SOCIAL
             None, 13.5, 22.8, 27.2, 3.2, 3.8, 11.7,
+            # BIENESTAR ECONÓMICO
             None, 3.8, 25.7
         ],
         'Pronóstico optimista 2024 (%)': [ # Data from the first image, cleaned to float where possible
+            # POBREZA
             None, 12.2, 11.5, 0.7, 34.6, 6.7, 46.6,
+            # PRIVACIÓN SOCIAL
             None, 46.8, 6.1,
+            # INDICADORES DE CARENCIA SOCIAL
             None, 13.7, 16.1, 27.2, 3.2, 3.8, 11.7,
+            # BIENESTAR ECONÓMICO
             None, 2.8, 18.9
         ],
         'Pronóstico restrictivo 2024 (%)': [ # Data from the first image, cleaned to float where possible
+            # POBREZA
             None, 15.1, 14.3, 0.8, 31.9, 8.6, 44.4,
+            # PRIVACIÓN SOCIAL
             None, 47.0, 6.0,
+            # INDICADORES DE CARENCIA SOCIAL
             None, 13.7, 16.2, 27.2, 3.2, 3.8, 11.7,
+            # BIENESTAR ECONÓMICO
             None, 3.4, 23.7
         ]
     }
@@ -79,6 +106,26 @@ def app():
         'Carencia por calidad y espacios de la vivienda',
         'Carencia por acceso a los servicios básicos de la vivienda',
         'Carencia por acceso a la alimentación nutritiva y de calidad'
+    ]
+
+    # Define variables by category for easy access
+    pobreza_variables = [
+        'Población en pobreza',
+        'Población en pobreza moderada',
+        'Población en pobreza extrema',
+        'Población vulnerable por carencias sociales',
+        'Población vulnerable por ingresos',
+        'Población no pobre y no vulnerable'
+    ]
+    
+    privacion_social_variables = [
+        'Población con al menos una carencia social',
+        'Población con al menos tres carencias sociales'
+    ]
+    
+    bienestar_economico_variables = [
+        'Población con ingreso inferior a la linea de pobreza extrema por ingresos',
+        'Población con ingreso inferior a la linea de pobreza por ingresos'
     ]
 
     # --- TABS ---
@@ -119,53 +166,49 @@ def app():
             """
         )
 
-        st.subheader("Visualización del Rango y Datos Anteriores (Pobreza) - Gráfico de Araña")
+        st.subheader("Visualización del Rango y Datos Anteriores (Pobreza) - Gráfico de Barras")
 
-        # Prepare data for radar chart for poverty
-        poverty_data_for_radar = {
-            'Scenario': ['2022', '2024 (Optimista)', '2024 (Restrictivo)'],
+        # Prepare data for bar chart for poverty
+        poverty_data_for_bar = {
+            'Escenario': ['2022', '2024 (Optimista)', '2024 (Restrictivo)'],
             'Pobreza (%)': [poverty_2022, optimistic_poverty_2024, restrictive_poverty_2024]
         }
-        df_poverty_radar = pd.DataFrame(poverty_data_for_radar)
+        df_poverty_bar = pd.DataFrame(poverty_data_for_bar)
+        
 
-        fig_poverty_radar = go.Figure()
 
-        # Add traces for each scenario for poverty
-        for index, row in df_poverty_radar.iterrows():
-            color = 'blue'
-            if 'Optimista' in row['Scenario']:
-                color = 'green'
-            elif 'Restrictivo' in row['Scenario']:
-                color = 'red'
-
-            fig_poverty_radar.add_trace(go.Scatterpolar(
-                r=[row['Pobreza (%)']],
-                theta=[row['Scenario']],
-                mode='markers+lines',
-                name=row['Scenario'],
-                fill='toself',
-                line_color=color,
-                # Corrected hovertemplate: removed f-string around Plotly placeholders
-                hovertemplate="<b>%{theta}</b><br>Pobreza: %{r:.1f}%<extra></extra>"
-            ))
-
-        fig_poverty_radar.update_layout(
-            polar=dict(
-                radialaxis=dict(
-                    visible=True,
-                    range=[0, max(poverty_2022, restrictive_poverty_2024) * 1.1] # Dynamic range
-                ),
-                angularaxis=dict(
-                    direction="clockwise",
-                    period=len(df_poverty_radar['Scenario']),
-                    tickvals=list(range(len(df_poverty_radar['Scenario']))),
-                    ticktext=df_poverty_radar['Scenario'].tolist() # Set custom tick labels
-                )
-            ),
-            showlegend=True,
-            title='Población en Pobreza: 2022 vs. Pronósticos 2024 (Gráfico de Araña)'
+        # Create bar chart with explicit configuration
+        fig_poverty_bar = px.bar(
+            df_poverty_bar,
+            x='Escenario',
+            y='Pobreza (%)',
+            color='Escenario',
+            color_discrete_map={
+                '2022': 'blue',
+                '2024 (Optimista)': 'green',
+                '2024 (Restrictivo)': 'red'
+            },
+            title='Población en Pobreza: 2022 vs. Pronósticos 2024 (Gráfico de Barras)',
+            text='Pobreza (%)'
         )
-        st.plotly_chart(fig_poverty_radar, use_container_width=True)
+        
+        # Force x-axis to be categorical
+        fig_poverty_bar.update_xaxes(type='category')
+
+        # Update layout for better presentation
+        fig_poverty_bar.update_traces(
+            texttemplate='%{text:.1f}%',
+            textposition='outside'
+        )
+        
+        fig_poverty_bar.update_layout(
+            xaxis_title="Escenario",
+            yaxis_title="Pobreza (%)",
+            showlegend=True,
+            height=500
+        )
+        
+        st.plotly_chart(fig_poverty_bar, use_container_width=True)
 
         st.markdown(
             """
@@ -177,9 +220,14 @@ def app():
             """
         )
 
-        st.header("2. Detalles Completos de Indicadores (2022 y Pronósticos 2024)")
+        st.header("2. Detalles Completos de Indicadores por Categorías (2022 y Pronósticos 2024)")
 
-        st.dataframe(df_full.style.hide(axis="index")) # Hides the index for cleaner display
+        # Display data organized by categories
+        for categoria in ['POBREZA', 'PRIVACIÓN SOCIAL', 'INDICADORES DE CARENCIA SOCIAL', 'BIENESTAR ECONÓMICO']:
+            st.subheader(f"**{categoria}**")
+            df_categoria = df_full[df_full['Categoría'] == categoria]
+            st.dataframe(df_categoria[['Variable', 'Valores 2022 (%)', 'Pronóstico optimista 2024 (%)', 'Pronóstico restrictivo 2024 (%)']].style.hide(axis="index"))
+            st.markdown("---")
 
         st.markdown(
             """
@@ -222,7 +270,7 @@ def app():
             polar=dict(
                 radialaxis=dict(
                     visible=True,
-                    range=[0, df_carencias.drop(columns=['Valores 2022 (%)']).max().max() * 1.1] # Dynamic range
+                    range=[0, df_carencias[['Pronóstico optimista 2024 (%)', 'Pronóstico restrictivo 2024 (%)']].max().max() * 1.1] # Dynamic range
                 )),
             showlegend=True,
             title='Comparativa de Carencias Sociales: 2022 vs. Pronósticos 2024'
@@ -259,51 +307,43 @@ def app():
             st.markdown("---")
             st.subheader("Comparativa de 'Población en Pobreza' (Real vs. Pronósticos vs. 2022)")
 
-            # Data for poverty comparison radar chart
-            poverty_data_compare_radar = {
-                'Scenario': ['2022', '2024 (Optimista)', '2024 (Restrictivo)', '2024 (Real)'],
+            # Data for poverty comparison bar chart
+            poverty_data_compare_bar = {
+                'Escenario': ['2022', '2024 (Optimista)', '2024 (Restrictivo)', '2024 (Real)'],
                 'Pobreza (%)': [poverty_2022, optimistic_poverty_2024, restrictive_poverty_2024, real_poverty_2024]
             }
-            df_poverty_compare_radar = pd.DataFrame(poverty_data_compare_radar)
+            df_poverty_compare_bar = pd.DataFrame(poverty_data_compare_bar)
 
-            fig_poverty_compare_radar = go.Figure()
-
-            colors_map = {
-                '2022': 'blue',
-                '2024 (Optimista)': 'green',
-                '2024 (Restrictivo)': 'red',
-                '2024 (Real)': 'darkblue'
-            }
-
-            for index, row in df_poverty_compare_radar.iterrows():
-                fig_poverty_compare_radar.add_trace(go.Scatterpolar(
-                    r=[row['Pobreza (%)']],
-                    theta=[row['Scenario']],
-                    mode='markers+lines',
-                    name=row['Scenario'],
-                    fill='toself',
-                    line_color=colors_map.get(row['Scenario'], 'grey'),
-                    # Corrected hovertemplate: removed f-string around Plotly placeholders
-                    hovertemplate="<b>%{theta}</b><br>Pobreza: %{r:.1f}%<extra></extra>"
-                ))
-
-            fig_poverty_compare_radar.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, max(poverty_2022, restrictive_poverty_2024, real_poverty_2024) * 1.1]
-                    ),
-                    angularaxis=dict(
-                        direction="clockwise",
-                        period=len(df_poverty_compare_radar['Scenario']),
-                        tickvals=list(range(len(df_poverty_compare_radar['Scenario']))),
-                        ticktext=df_poverty_compare_radar['Scenario'].tolist()
-                    )
-                ),
-                showlegend=True,
-                title='Población en Pobreza: Comparativa Real vs. Pronósticos (Gráfico de Araña)'
+            # Create comparison bar chart
+            fig_poverty_compare_bar = px.bar(
+                df_poverty_compare_bar,
+                x='Escenario',
+                y='Pobreza (%)',
+                color='Escenario',
+                color_discrete_map={
+                    '2022': 'blue',
+                    '2024 (Optimista)': 'green',
+                    '2024 (Restrictivo)': 'red',
+                    '2024 (Real)': 'darkblue'
+                },
+                title='Población en Pobreza: Comparativa Real vs. Pronósticos (Gráfico de Barras)',
+                text='Pobreza (%)'
             )
-            st.plotly_chart(fig_poverty_compare_radar, use_container_width=True)
+
+            # Update layout for better presentation
+            fig_poverty_compare_bar.update_traces(
+                texttemplate='%{text:.1f}%',
+                textposition='outside'
+            )
+            
+            fig_poverty_compare_bar.update_layout(
+                xaxis_title="Escenario",
+                yaxis_title="Pobreza (%)",
+                showlegend=True,
+                height=500
+            )
+            
+            st.plotly_chart(fig_poverty_compare_bar, use_container_width=True)
 
 
             st.subheader("Comparativa de Carencias Sociales (Real vs. Pronósticos vs. 2022)")
@@ -342,7 +382,7 @@ def app():
                   line_width=3
             ))
 
-            max_val = max(df_carencias.max(numeric_only=True).max(), max(real_carencias.values())) if real_carencias else df_carencias.max(numeric_only=True).max()
+            max_val = max(df_carencias[['Valores 2022 (%)', 'Pronóstico optimista 2024 (%)', 'Pronóstico restrictivo 2024 (%)']].max().max(), max(real_carencias.values())) if real_carencias else df_carencias[['Valores 2022 (%)', 'Pronóstico optimista 2024 (%)', 'Pronóstico restrictivo 2024 (%)']].max().max()
             fig_carencias_compare_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(
